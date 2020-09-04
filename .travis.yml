@@ -1,0 +1,20 @@
+sudo: required
+services:
+    - docker
+before_install:
+    #you need to add openssl commandd here after you encrypt your json file from travis ci
+    - curl https://dsk.cloud.google.com | bash > /dev/null
+    - source $HOME/google-cloud-sdk/path.bash.inc
+    - gcloud components update kubectl
+    - gcloud auth activate-service-account --key-file service-account.json
+    #set on which google project you want to work
+    - gcloud config set project <id of google project>
+    #specify compute zone of google cloud
+    - gcloud config set compute/zone <ur zone>
+    #tell what cluster you running
+    - gcloud container cluster get-credentials <k8s cluster name>
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker build -t tanmay8898/client -f ./client/Dockerfile.dev ./client
+    
+script:
+    - docker run -e CI=true tanmay8898/client npm test
